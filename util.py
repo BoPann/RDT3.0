@@ -88,15 +88,6 @@ def make_packet(data_str, ack_num, seq_num):
 
     return pkt
 
-    
-def getAckSeq(packet):
-    
-    data = packet[10:12]
-    binary_representation = ''.join(format(byte, '08b') for byte in data)
-    seq = binary_representation[-1]
-    ack = binary_representation[-2]
-    
-    return ack, seq
 
 def getMsg(packet):
     data = packet[12:]

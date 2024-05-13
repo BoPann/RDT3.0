@@ -11,10 +11,10 @@ class Sender:
         Please check the main.py for a reference of how your function will be called.
         """
         self.RECEIVER_SERVER = ('localhost', 10101)
-        self.SENDER_SERVER = ('localhost', 10100)
-        self.ack_num = 0
+        self.SENDER_SERVER = ('localhost', 10190)
         self.seq_num = 0
-        self.p_number = 1
+        self.p_number = 0
+        self.first_transmission = True
 
   def rdt_send(self, app_msg_str):
       """realibly send a message to the receiver (MUST-HAVE DO-NOT-CHANGE)
@@ -23,51 +23,55 @@ class Sender:
         app_msg_str: the message string (to be put in the data field of the packet)
 
       """
+      # make packet
+      # the packet will have ack 0 because the first packet is not a ack packet
+      pkt = util.make_packet(app_msg_str, 0, self.seq_num)
+      if self.first_transmission:
+          # print the packet content only in first transmission
+          print("original message string:", app_msg_str)
+          print("packet created:", pkt)
+          
       
+      # create socket
+      with socket(AF_INET, SOCK_DGRAM) as s:
+          s.settimeout(3)
 
-      while True:
-        # create socket
-        with socket(AF_INET, SOCK_DGRAM) as s:
-            
-            # make packet
-            print("original message string:", app_msg_str)
-            pkt = util.make_packet(app_msg_str, self.ack_num, self.seq_num)
-            print("packet created:", pkt)
+          # send packet to receiver
+          s.sendto(pkt, self.RECEIVER_SERVER)
+          self.p_number += 1
+          print(f"packet num.{self.p_number} is successfully sent to the receiver.")
 
-            # send packet to receiver
-            s.bind(self.SENDER_SERVER)
-            s.sendto(pkt, self.RECEIVER_SERVER)
-            while True:
-              try:
-                  s.settimeout(2)
-                  ack_packet, addr = s.recvfrom(2048)
-                  # print('Received a message from', addr, ':', ack_packet)
-                  print(f"packet num.{self.p_number} is successfully sent to the receiver.")
-                  ack, seq = util.getAckSeq(ack_packet)
-                  ack = int(ack)
-                  seq = int(seq)
-                  # print("seq: ", seq)
-                  # print("my seq: ", self.seq_num)
-                  # print("ack received: ", ack)
-                  # print("my ack: ", self.ack_num)
+          try:
+              # receive the ack packet
+              ack_packet, addr = s.recvfrom(2048)
+              # ack, seq = util.getAckSeq(ack_packet)
+              # ack = int(ack)
 
-                  # when get the right ack number
-                  if ack == self.ack_num:
-                      break
-                  # did not get the correct ack number
-                  else:
-                      s.sendto(pkt, self.RECEIVER_SERVER)
-                      print("receiver acked the previous pkt, resend!")
-                      
-              except timeout:
-                  s.sendto(pkt, self.RECEIVER_SERVER)
-                  print("socket timeout! Resend!\n\n")
+              ack = 1 if (ack_packet[11] & 1) == 1 else 0
 
-        print(f"packet is received correctly: seq. num {self.seq_num} = ACK. num {self.ack_num} all done!\n\n")
-        self.seq_num = (self.seq_num + 1) % 2
-        self.ack_num = (self.ack_num + 1) % 2
-        self.p_number += 1
-        break
+              # when get the right ack number
+              if ack == self.seq_num:
+                  print(f"packet is received correctly: seq. num {self.seq_num} = ACK. num {ack} all done!\n")
+                  self.seq_num = 0 if self.seq_num == 1 else 1 
+                  self.first_transmission = True
+
+              # did not get the correct ack number
+              else:
+                  # s.sendto(pkt, self.RECEIVER_SERVER)
+                  print("receiver acked the previous pkt, resend!\n")
+                  print('[ACK-Previous retransmission]: ' + app_msg_str)
+                  self.first_transmission = False
+                  self.rdt_send(app_msg_str)
+              s.close()
+                  
+          except timeout:
+              print("socket timeout! Resend!\n")
+              print('[timeout retransmission]: ' + app_msg_str)
+              # s.sendto(pkt, self.RECEIVER_SERVER)
+              self.first_transmission = False
+              self.rdt_send(app_msg_str)
+
+
 
   ####### Your Sender class in sender.py MUST have the rdt_send(app_msg_str)  #######
   ####### function, which will be called by an application to                 #######

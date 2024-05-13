@@ -8,7 +8,7 @@ PORT = 10101
 SERVER_NAME = 'localhost'
 
 p_number = 0
-# machine state
+# current seq
 prev_seq = 0
 
 
@@ -23,15 +23,15 @@ while True:
 
     # receive the packet
     data, addr = s.recvfrom(2056)
-    print(f"Packet num.{p_number} received: {data}")
     p_number += 1
+    print(f"Packet num.{p_number} received: {data}")
     
     # make sleep to simulate timeout
     # flag is used so only sleep once on the same packet
     if p_number % 6 == 0:
         # Simulate packet loss every 6 packets
         print('simulating packet loss: sleep a while to trigger timeout event on the sender side...')
-        sleep(10)
+        sleep(3.5)
 
     elif not util.verify_checksum(data) or p_number % 3 == 0:
         print('simulating packet bit errors/corruption: ACK the previous packet!')
@@ -46,6 +46,6 @@ while True:
         response_packet = util.make_packet('', 1, prev_seq)
         s.sendto(response_packet, addr)
         # Update previous seq num
-        previous_seq = seq
+        prev_seq = seq
         
     print('all done for this packet!\n')
