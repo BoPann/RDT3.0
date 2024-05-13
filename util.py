@@ -63,32 +63,25 @@ def make_packet(data_str, ack_num, seq_num):
 
     """
     # make sure your packet follows the required format!
-
-    # COMPNETW
     header = b'COMPNETW'
-    
-    # data
-    msg = data_str.encode()
 
-    #length
-    data_len = len(header + msg) + 4
-    binary_len = bin(data_len)[2:].zfill(14)
-    # insert ack and seq
-    binary_len = binary_len + str(ack_num) + str(seq_num)
-    # convert the string representation back to int and to bynary
-    len_block = int(binary_len, 2)
-    len_bytes = len_block.to_bytes(2, byteorder='big')
+    # Calculate packet length, first_eight_bytes + data length
+    total_length = 12 + len(data_str)
+    # compute length field
+    length_field = (total_length << 2) | (ack_num << 1) | seq_num
+    length = length_field.to_bytes(2, "big")
+    data_bytes = data_str.encode()
 
-    #hecksum
-    checkSum = create_checksum(header + msg + len_bytes)
-    # print(checkSum)
-    
+    # Create checksum 
+    checksum = create_checksum(header + length + data_bytes)
+
     # construct message
-    pkt = header + checkSum + len_bytes + msg
+    packet = header + checksum + length + data_bytes
 
-    return pkt
+    return packet
 
 
+# extract message
 def getMsg(packet):
     data = packet[12:]
     return data.decode()

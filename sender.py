@@ -11,9 +11,8 @@ class Sender:
         Please check the main.py for a reference of how your function will be called.
         """
         self.RECEIVER_SERVER = ('localhost', 10101)
-        self.SENDER_SERVER = ('localhost', 10190)
         self.seq_num = 0
-        self.p_number = 0
+        self.p_number = 1
         self.first_transmission = True
 
   def rdt_send(self, app_msg_str):
@@ -34,19 +33,17 @@ class Sender:
       
       # create socket
       with socket(AF_INET, SOCK_DGRAM) as s:
-          s.settimeout(3)
+          s.settimeout(3) 
 
           # send packet to receiver
           s.sendto(pkt, self.RECEIVER_SERVER)
-          self.p_number += 1
           print(f"packet num.{self.p_number} is successfully sent to the receiver.")
+          self.p_number += 1
 
           try:
               # receive the ack packet
               ack_packet, addr = s.recvfrom(2048)
-              # ack, seq = util.getAckSeq(ack_packet)
-              # ack = int(ack)
-
+              # extract the ack bit
               ack = 1 if (ack_packet[11] & 1) == 1 else 0
 
               # when get the right ack number
@@ -56,6 +53,7 @@ class Sender:
                   self.first_transmission = True
 
               # did not get the correct ack number
+              # resend the package
               else:
                   # s.sendto(pkt, self.RECEIVER_SERVER)
                   print("receiver acked the previous pkt, resend!\n")
@@ -63,8 +61,9 @@ class Sender:
                   self.first_transmission = False
                   self.rdt_send(app_msg_str)
               s.close()
-                  
-          except timeout:
+          # time out and packet not received
+          # resend the packet
+          except Exception as e:
               print("socket timeout! Resend!\n")
               print('[timeout retransmission]: ' + app_msg_str)
               # s.sendto(pkt, self.RECEIVER_SERVER)
