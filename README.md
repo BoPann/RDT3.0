@@ -1,10 +1,15 @@
-### RDT3.0 program written in Python to ensure reliable data transfer
+### Introduciton
+The objective of this project is to simulate reliable communication between two end users. By implementing mechanisms to handle packet loss, errors, and duplications, the project aims to ensure data integrity and consistency, thereby demonstrating a robust and dependable communication protocol in a simulated network environment.
 
+### Background
+RDT 3.0 (Reliable Data Transfer Protocol 3.0) is a networking protocol designed to ensure reliable communication over unreliable channels. It introduces mechanisms like acknowledgments and retransmissions to handle packet loss, errors, and duplications, providing a robust solution for maintaining data integrity and consistency in challenging network environments.
+
+
+### Rules to be Implemented with the Finite State Machine Overview
 
 ![image](https://github.com/BoPann/RDT3.0/assets/114901461/8ae033c8-7ac4-4409-b14f-4dd7a6475596)
 
 
-### Rule
 ![image](https://github.com/BoPann/RDT3.0/assets/114901461/5199ff4b-4d0a-4217-bb78-ad64e782df28)
 
 
